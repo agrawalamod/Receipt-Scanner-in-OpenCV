@@ -25,7 +25,7 @@ Mat DFTMagnitude(Mat complexI, Size s);
 Mat FFT(Mat I);
 Mat alphaMeanTrim(Mat img1, int alpha);
 Mat Erosion(Mat src, int erosion_size, int erosion_elem );
-Mat Dilation( Mat src, int erosion_size, int erosion_elem);
+Mat Dilation( Mat src, int dilation_size, int dilation_elem);
 vector<Point2f> distance(Mat img, vector<Point> polygon);
 Mat warpImage(Mat src, vector<Point2f> corners);
 
@@ -315,10 +315,16 @@ Mat warpImage(Mat src, vector<Point2f> corners)
     y4 = corners[3].y;
 
     float minx, maxx, miny, maxy;
-    minx = x1<x4 ? x1:x4;
+   /* minx = x1<x4 ? x1:x4;
     maxx = x2>x3 ? x2:x3;
     miny = y1<y2 ? y1:y2;
-    maxy = y3>y4 ? y3:y4;
+    maxy = y3>y4 ? y3:y4;*/
+
+    minx = x1>x4 ? x1:x4;
+    maxx = x2<x3 ? x2:x3;
+    miny = y1>y2 ? y1:y2;
+    maxy = y3<y4 ? y3:y4;
+
     cout << minx << " " << maxx << " " << miny << " " << maxy<<endl;
     // Define the destination image
     cv::Mat quad = cv::Mat::zeros(maxy-miny, maxx-minx, CV_8UC1);
@@ -529,20 +535,28 @@ int main(int argc, const char** argv)
     IDFT(result);*/
 
     Mat CannyResult = CannyThreshold(75, 200, img1);
-    //Mat dilated = Dilation(CannyResult,2,0);
-    //Mat eroded = Erosion(CannyResult,1,0);
+    
 
     //Dilation(Erosion(CannyResult,1,0),1,0);
     vector<Point> polygon = findLargestContours(CannyResult);
     vector<Point2f> corners = detectCorners(CannyResult, polygon);
 
-    Mat again = CannyThreshold(75, 200, img1);
-    Mat warpedImage = warpImage(img1,corners);
+    //Mat again = CannyThreshold(75, 200, img1);
+    Mat warpedImage = warpImage(img1,corners);      
+
+    //blur(warpedImage, warpedImage, Size(3,3));
     Mat dst = Mat::zeros(warpedImage.rows, warpedImage.cols, CV_8UC1);
-    adaptiveThreshold(warpedImage, dst,255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 75, 10);
+
+    adaptiveThreshold(warpedImage, dst,255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY, 51, 30);
+    
+    //Mat eroded = Erosion(dst,1,0);
+    //Mat dilated = Dilation(eroded,1,0);
+    
+     
+
 
     imshow("dst", dst);
-    imwrite("threshold_image.jpg", dst);
+    imwrite("threshold_image1.jpg", dst);
     waitKey(0);
     //Dilation(Erosion(coutour_output,3,0),3,0);
 
